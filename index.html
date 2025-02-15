@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>iOS 12-Compatible Chatbot Interface</title>
+  <title>Gemini 1.5 Flash Chatbot</title>
   <style>
     /* Basic styles for our chat interface */
     body {
@@ -51,7 +51,7 @@
 </head>
 <body>
   <div id="chat-container">
-    <h2>Chatbot Interface</h2>
+    <h2>Gemini Chatbot Interface</h2>
     <div id="messages"></div>
     <form id="input-form">
       <input type="text" id="message-input" placeholder="Type your message..." autocomplete="off" />
@@ -59,11 +59,15 @@
     </form>
   </div>
 
+  <!-- Load our configuration file that contains the API key.
+       Make sure this file (config.js) is excluded from version control. -->
+  <script src="config.js"></script>
+
   <!-- Polyfill: Provide String.padEnd if not supported (for older browsers like iOS 12) -->
   <script>
     if (!String.prototype.padEnd) {
       String.prototype.padEnd = function padEnd(targetLength, padString) {
-        targetLength = targetLength >> 0; // Convert to integer or 0
+        targetLength = targetLength >> 0;
         padString = String(padString || ' ');
         if (this.length >= targetLength) {
           return String(this);
@@ -82,16 +86,44 @@
 
   <!-- Main JavaScript Code (written in modern ES6+) -->
   <script type="text/babel">
+    // Read the API key from our global configuration object.
+    const API_KEY = window.CONFIG && window.CONFIG.GEMINI_API_KEY;
+    const GEMINI_ENDPOINT = 'https://api.googleai.dev/gemini/v1.5/flash'; // Replace with the actual endpoint if different
+
     // Grab references to DOM elements
     const messagesDiv = document.getElementById('messages');
     const form = document.getElementById('input-form');
     const input = document.getElementById('message-input');
 
-    // A simple function to simulate a chatbot response
-    const getBotResponse = (message) => {
-      // For demonstration, we echo the message padded to 30 characters using padEnd (polyfilled if needed)
-      return `Echo: ${message}`.padEnd(30, ' ');
-    };
+    // Function to call the Gemini API
+    async function callGeminiAPI(promptText) {
+      try {
+        const requestBody = {
+          prompt: promptText,
+          max_tokens: 100, // Adjust token output as needed
+        };
+
+        const response = await fetch(GEMINI_ENDPOINT, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${API_KEY}`
+          },
+          body: JSON.stringify(requestBody)
+        });
+
+        if (!response.ok) {
+          throw new Error(`API error: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        // Assuming the API returns the generated text in data.output
+        return data.output || "No response from Gemini.";
+      } catch (error) {
+        console.error("Error calling Gemini API:", error);
+        return "Error: Unable to get a response.";
+      }
+    }
 
     // Function to append a message to the conversation
     const appendMessage = (text, sender) => {
@@ -103,21 +135,24 @@
     };
 
     // Handle form submission
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const userText = input.value.trim();
       if (userText !== '') {
         appendMessage(userText, 'user');
         input.value = '';
-        // Simulate an async chatbot response after 500ms
-        setTimeout(() => {
-          const botText = getBotResponse(userText);
-          appendMessage(botText, 'bot');
-        }, 500);
+
+        // Show a loading indicator for the bot response
+        appendMessage("...", 'bot');
+
+        // Remove the loading indicator before appending actual response
+        const botResponse = await callGeminiAPI(userText);
+        messagesDiv.removeChild(messagesDiv.lastChild); // Remove loading indicator
+        appendMessage(botResponse, 'bot');
       }
     });
 
-    console.log("Chatbot Interface Initialized");
+    console.log("Gemini Chatbot Interface Initialized");
   </script>
 </body>
 </html>
