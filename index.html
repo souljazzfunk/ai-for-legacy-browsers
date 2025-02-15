@@ -59,6 +59,10 @@
     </form>
   </div>
 
+  <!-- Load our configuration file that contains the API key.
+       Make sure this file (config.js) is in .gitignore -->
+  <script src="config.js"></script>
+
   <!-- Polyfill for older browsers (e.g. iOS 12) -->
   <script>
     if (!String.prototype.padEnd) {
@@ -82,7 +86,7 @@
 
   <!-- Main JavaScript Code -->
   <script type="text/babel">
-    // Instead of calling the Gemini API directly, we call our Netlify function endpoint
+    // Our Netlify function endpoint
     const NETLIFY_FUNCTION_URL = '/.netlify/functions/gemini';
 
     // Grab references to DOM elements
@@ -90,7 +94,7 @@
     const form = document.getElementById('input-form');
     const input = document.getElementById('message-input');
 
-    // Function to call our Netlify function, which in turn calls the Gemini API
+    // Function to call our Netlify function which proxies the Gemini API request
     async function callGeminiViaFunction(promptText) {
       try {
         const response = await fetch(NETLIFY_FUNCTION_URL, {
@@ -108,8 +112,8 @@
         const data = await response.json();
         return data.output || "No response received.";
       } catch (error) {
-        console.error("Error calling Netlify function:", error);
-        return "Error: Unable to get a response.";
+        // Instead of only logging to console, return the error message
+        return "Error: " + error.message;
       }
     }
 
@@ -130,12 +134,13 @@
         appendMessage(userText, 'user');
         input.value = '';
 
-        // Show a temporary loading indicator
+        // Display a loading indicator for the bot response
         appendMessage("...", 'bot');
 
         const botResponse = await callGeminiViaFunction(userText);
-        // Remove the loading indicator and add the actual response
+        // Remove the loading indicator
         messagesDiv.removeChild(messagesDiv.lastChild);
+        // Append the bot's response, which may include an error message
         appendMessage(botResponse, 'bot');
       }
     });
