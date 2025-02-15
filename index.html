@@ -106,7 +106,7 @@
         });
 
         if (!response.ok) {
-          throw new Error(`Function error: ${response.statusText}`);
+          throw new Error(`Function error (${response.status}): ${response.statusText || 'No status text provided'}`);
         }
 
         const data = await response.json();
