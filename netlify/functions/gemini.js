@@ -22,7 +22,6 @@ exports.handler = async (event) => {
       }
     };
 
-    // Include API key in URL query parameter
     const response = await fetch(`${GEMINI_ENDPOINT}?key=${process.env.GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {
@@ -39,18 +38,18 @@ exports.handler = async (event) => {
     const data = await response.json();
     console.log("Full Gemini API response:", data);
 
-    // Adjust extraction logic based on the response structure.
-    // For example, if the response contains a "candidates" array, return the text of the first candidate.
-    if (data.candidates && data.candidates.length > 0 && data.candidates[0].text) {
-      return {
-        statusCode: 200,
-        body: JSON.stringify({ output: data.candidates[0].text })
-      };
+    // Extracting the response text correctly
+    let generatedText = "No response from Gemini.";
+    if (data.candidates && data.candidates.length > 0) {
+      const candidate = data.candidates[0];
+      if (candidate.content && candidate.content.parts && candidate.content.parts.length > 0) {
+        generatedText = candidate.content.parts.map(part => part.text).join(" ");
+      }
     }
-    
+
     return {
       statusCode: 200,
-      body: JSON.stringify({ output: "No response from Gemini." })
+      body: JSON.stringify({ output: generatedText })
     };
 
   } catch (error) {
