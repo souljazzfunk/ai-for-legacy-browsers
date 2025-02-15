@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Gemini 1.5 Flash Chatbot</title>
+  <title>Gemini Chatbot on Netlify</title>
   <style>
     /* Basic styles for our chat interface */
     body {
@@ -59,11 +59,7 @@
     </form>
   </div>
 
-  <!-- Load our configuration file that contains the API key.
-       Make sure this file (config.js) is excluded from version control. -->
-  <script src="config.js"></script>
-
-  <!-- Polyfill: Provide String.padEnd if not supported (for older browsers like iOS 12) -->
+  <!-- Polyfill for older browsers (e.g. iOS 12) -->
   <script>
     if (!String.prototype.padEnd) {
       String.prototype.padEnd = function padEnd(targetLength, padString) {
@@ -81,46 +77,38 @@
     }
   </script>
 
-  <!-- Babel Standalone: Transpile our modern JS code for older browsers -->
+  <!-- Babel Standalone for transpiling modern JavaScript -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-  <!-- Main JavaScript Code (written in modern ES6+) -->
+  <!-- Main JavaScript Code -->
   <script type="text/babel">
-    // Read the API key from our global configuration object.
-    const API_KEY = window.CONFIG && window.CONFIG.GEMINI_API_KEY;
-    const GEMINI_ENDPOINT = 'https://api.googleai.dev/gemini/v1.5/flash'; // Replace with the actual endpoint if different
+    // Instead of calling the Gemini API directly, we call our Netlify function endpoint
+    const NETLIFY_FUNCTION_URL = '/.netlify/functions/gemini';
 
     // Grab references to DOM elements
     const messagesDiv = document.getElementById('messages');
     const form = document.getElementById('input-form');
     const input = document.getElementById('message-input');
 
-    // Function to call the Gemini API
-    async function callGeminiAPI(promptText) {
+    // Function to call our Netlify function, which in turn calls the Gemini API
+    async function callGeminiViaFunction(promptText) {
       try {
-        const requestBody = {
-          prompt: promptText,
-          max_tokens: 100, // Adjust token output as needed
-        };
-
-        const response = await fetch(GEMINI_ENDPOINT, {
+        const response = await fetch(NETLIFY_FUNCTION_URL, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${API_KEY}`
+            'Content-Type': 'application/json'
           },
-          body: JSON.stringify(requestBody)
+          body: JSON.stringify({ prompt: promptText })
         });
 
         if (!response.ok) {
-          throw new Error(`API error: ${response.statusText}`);
+          throw new Error(`Function error: ${response.statusText}`);
         }
 
         const data = await response.json();
-        // Assuming the API returns the generated text in data.output
-        return data.output || "No response from Gemini.";
+        return data.output || "No response received.";
       } catch (error) {
-        console.error("Error calling Gemini API:", error);
+        console.error("Error calling Netlify function:", error);
         return "Error: Unable to get a response.";
       }
     }
@@ -142,17 +130,17 @@
         appendMessage(userText, 'user');
         input.value = '';
 
-        // Show a loading indicator for the bot response
+        // Show a temporary loading indicator
         appendMessage("...", 'bot');
 
-        // Remove the loading indicator before appending actual response
-        const botResponse = await callGeminiAPI(userText);
-        messagesDiv.removeChild(messagesDiv.lastChild); // Remove loading indicator
+        const botResponse = await callGeminiViaFunction(userText);
+        // Remove the loading indicator and add the actual response
+        messagesDiv.removeChild(messagesDiv.lastChild);
         appendMessage(botResponse, 'bot');
       }
     });
 
-    console.log("Gemini Chatbot Interface Initialized");
+    console.log("Gemini Chatbot Interface Initialized on Netlify");
   </script>
 </body>
 </html>
