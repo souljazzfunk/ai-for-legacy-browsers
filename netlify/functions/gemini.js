@@ -4,26 +4,28 @@ const fetch = require('node-fetch');
 exports.handler = async (event) => {
   try {
     const { prompt } = JSON.parse(event.body);
-    const GEMINI_ENDPOINT = 'https://api.googleai.dev/gemini/v1.5/flash'; // Update if needed
+    const GEMINI_ENDPOINT = 'https://api.googleai.dev/gemini/v1.5/flash'; // Update if necessary
 
     const response = await fetch(GEMINI_ENDPOINT, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        // The API key is securely injected via Netlify's environment variables
         'Authorization': `Bearer ${process.env.GEMINI_API_KEY}`
       },
       body: JSON.stringify({
         prompt,
-        max_tokens: 100 // Adjust as needed
+        max_tokens: 100
       })
     });
 
     if (!response.ok) {
-      return {
-        statusCode: response.status,
-        body: JSON.stringify({ error: response.statusText }),
-      };
+      // Attempt to read and include the response body for more details.
+      const errorBody = await response.text();
+      throw new Error(
+        `Function error (${response.status}): ${
+          response.statusText || errorBody || 'No status text provided'
+        }`
+      );
     }
 
     const data = await response.json();
