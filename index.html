@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>iOS 12-Compatible Chatbot Interface</title>
+  <style>
+    /* Basic styles for our chat interface */
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      background: #f2f2f2;
+    }
+    #chat-container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: #fff;
+      border: 1px solid #ccc;
+      padding: 10px;
+      border-radius: 4px;
+    }
+    #messages {
+      height: 300px;
+      overflow-y: auto;
+      border: 1px solid #eee;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    .message {
+      margin-bottom: 10px;
+    }
+    .message.user {
+      text-align: right;
+      color: #007aff;
+    }
+    .message.bot {
+      text-align: left;
+      color: #34c759;
+    }
+    #input-form {
+      display: flex;
+    }
+    #message-input {
+      flex: 1;
+      padding: 8px;
+    }
+    #send-btn {
+      padding: 8px 16px;
+    }
+  </style>
+</head>
+<body>
+  <div id="chat-container">
+    <h2>Chatbot Interface</h2>
+    <div id="messages"></div>
+    <form id="input-form">
+      <input type="text" id="message-input" placeholder="Type your message..." autocomplete="off" />
+      <button type="submit" id="send-btn">Send</button>
+    </form>
+  </div>
+
+  <!-- Polyfill: Provide String.padEnd if not supported (for older browsers like iOS 12) -->
+  <script>
+    if (!String.prototype.padEnd) {
+      String.prototype.padEnd = function padEnd(targetLength, padString) {
+        targetLength = targetLength >> 0; // Convert to integer or 0
+        padString = String(padString || ' ');
+        if (this.length >= targetLength) {
+          return String(this);
+        }
+        targetLength = targetLength - this.length;
+        if (targetLength > padString.length) {
+          padString += padString.repeat(targetLength / padString.length);
+        }
+        return String(this) + padString.slice(0, targetLength);
+      };
+    }
+  </script>
+
+  <!-- Babel Standalone: Transpile our modern JS code for older browsers -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Main JavaScript Code (written in modern ES6+) -->
+  <script type="text/babel">
+    // Grab references to DOM elements
+    const messagesDiv = document.getElementById('messages');
+    const form = document.getElementById('input-form');
+    const input = document.getElementById('message-input');
+
+    // A simple function to simulate a chatbot response
+    const getBotResponse = (message) => {
+      // For demonstration, we echo the message padded to 30 characters using padEnd (polyfilled if needed)
+      return `Echo: ${message}`.padEnd(30, ' ');
+    };
+
+    // Function to append a message to the conversation
+    const appendMessage = (text, sender) => {
+      const messageEl = document.createElement('div');
+      messageEl.className = 'message ' + sender;
+      messageEl.innerText = text;
+      messagesDiv.appendChild(messageEl);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    };
+
+    // Handle form submission
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const userText = input.value.trim();
+      if (userText !== '') {
+        appendMessage(userText, 'user');
+        input.value = '';
+        // Simulate an async chatbot response after 500ms
+        setTimeout(() => {
+          const botText = getBotResponse(userText);
+          appendMessage(botText, 'bot');
+        }, 500);
+      }
+    });
+
+    console.log("Chatbot Interface Initialized");
+  </script>
+</body>
+</html>
