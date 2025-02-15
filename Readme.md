@@ -1,6 +1,6 @@
 # ai-for-legacy-browsers
 
-**retro-ai-chat** brings state-of-the-art AI (via Google Gemini API) to legacy devices with a simple chat interface.
+brings state-of-the-art AI (via Google Gemini API) to legacy devices with a simple chat interface.
 
 ## Features
 - **Simplest UI:** Lightweight, minimal design optimized for older devices.
