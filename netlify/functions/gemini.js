@@ -4,11 +4,7 @@ exports.handler = async (event) => {
   try {
     const { prompt } = JSON.parse(event.body);
 
-    // Use the Gemini 2.0 Flash endpoint as shown in your curl example.
-    // Note: We omit the API key from the URL since we pass it via the Authorization header.
     const GEMINI_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
-
-    // Prepare the payload using the structure expected by Gemini 2.0 Flash
     const requestBody = {
       contents: [{
         parts: [
@@ -26,6 +22,7 @@ exports.handler = async (event) => {
       }
     };
 
+    // Include API key in URL query parameter
     const response = await fetch(`${GEMINI_ENDPOINT}?key=${process.env.GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {
@@ -40,16 +37,27 @@ exports.handler = async (event) => {
     }
 
     const data = await response.json();
-    // Assuming the API returns the generated text in data.output or similar structure.
+    console.log("Full Gemini API response:", data);
+
+    // Adjust extraction logic based on the response structure.
+    // For example, if the response contains a "candidates" array, return the text of the first candidate.
+    if (data.candidates && data.candidates.length > 0 && data.candidates[0].text) {
+      return {
+        statusCode: 200,
+        body: JSON.stringify({ output: data.candidates[0].text })
+      };
+    }
+    
     return {
       statusCode: 200,
-      body: JSON.stringify({ output: data.output || "No response from Gemini." }),
+      body: JSON.stringify({ output: "No response from Gemini." })
     };
+
   } catch (error) {
     console.error("Error in Gemini function:", error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: error.message }),
+      body: JSON.stringify({ error: error.message })
     };
   }
 };
